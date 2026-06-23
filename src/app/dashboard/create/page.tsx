@@ -4,7 +4,6 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash } from 'lucide-react';
 
-// Static, canonical list of universally recognized IANA timezones supported by QStash
 const VALID_QSTASH_TIMEZONES = [
   'Asia/Kolkata',
   'America/New_York',
@@ -21,12 +20,16 @@ const VALID_QSTASH_TIMEZONES = [
   'UTC'
 ];
 
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
 export default function CreateJobPage() {
   const router = useRouter();
   const supabase = createClient();
   
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
+  const [method, setMethod] = useState('POST');
+  const [body, setBody] = useState('');
   const [jobType, setJobType] = useState<'Recurring' | 'One-Off'>('Recurring');
   const [frequency, setFrequency] = useState('hourly');
   const [runAt, setRunAt] = useState('');
@@ -68,6 +71,17 @@ export default function CreateJobPage() {
       return;
     }
 
+    // JSON Structural Check if payload is supplied
+    let parsedPayload = null;
+    if (body.trim() !== '') {
+      try {
+        parsedPayload = JSON.parse(body);
+      } catch (err) {
+        alert("Invalid JSON format in Request Payload field.");
+        return;
+      }
+    }
+
     const computedHeaders = headers.reduce((acc, curr) => {
       if (curr.key.trim() !== '') {
         acc[curr.key.trim()] = curr.value.trim();
@@ -79,6 +93,8 @@ export default function CreateJobPage() {
       user_id: user.id,
       name: name.trim(),
       url: url.trim(),
+      method: method,
+      body: parsedPayload,
       timezone: timezone,
       retries: 3,
       headers: computedHeaders,
@@ -120,7 +136,8 @@ export default function CreateJobPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="border border-gray-200 bg-white p-4 sm:p-6 md:p-8 shadow-sm space-y-6 text-sm">
-        {/* Core Inputs Grid: Stacked by default, splitting on medium viewpoints */}
+        
+        {/* Core Inputs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium text-black mb-1.5 md:mb-2">Job Identifier Name</label>
@@ -132,18 +149,33 @@ export default function CreateJobPage() {
           </div>
         </div>
 
-        <div>
-          <label className="block font-medium text-black mb-2">Execution Topology Model</label>
-          <div className="flex space-x-2 sm:space-x-4">
-            {['Recurring', 'One-Off'].map(type => (
-              <button key={type} type="button" onClick={() => setJobType(type as any)} className={`flex-1 sm:flex-initial text-center px-4 py-3 md:py-2 font-medium border text-xs tracking-wide transition-all ${jobType === type ? 'bg-black text-white border-black' : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'}`}>
-                {type}
-              </button>
-            ))}
+        {/* HTTP Protocol Method and Execution Topology */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block font-medium text-black mb-1.5 md:mb-2">HTTP Request Method</label>
+            <select 
+              className="w-full border border-gray-200 p-3 md:p-2.5 bg-white text-sm md:text-xs focus:border-black focus:outline-none h-[46px] md:h-[42px]" 
+              value={method} 
+              onChange={e => setMethod(e.target.value)}
+            >
+              {HTTP_METHODS.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium text-black mb-1.5 md:mb-2">Execution Topology Model</label>
+            <div className="flex space-x-2 h-[46px] md:h-[42px]">
+              {['Recurring', 'One-Off'].map(type => (
+                <button key={type} type="button" onClick={() => setJobType(type as any)} className={`flex-1 text-center px-4 font-medium border text-xs tracking-wide transition-all ${jobType === type ? 'bg-black text-white border-black' : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'}`}>
+                  {type}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Dynamic Parameter Grid: Stacks neatly on mobile */}
+        {/* Conditional Scheduling Parameters */}
         {jobType === 'Recurring' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -181,6 +213,20 @@ export default function CreateJobPage() {
           <div>
             <label className="block font-medium text-black mb-1.5 md:mb-2">Target Universal Date & Time execution</label>
             <input type="datetime-local" required className="w-full md:w-auto border border-gray-200 p-3 md:p-2.5 text-sm md:text-xs focus:border-black focus:outline-none bg-white" value={runAt} onChange={e => setRunAt(e.target.value)} />
+          </div>
+        )}
+
+        {/* Optional JSON Payload field */}
+        {method !== 'GET' && (
+          <div>
+            <label className="block font-medium text-black mb-1.5 md:mb-2">JSON Request Body Payload (Optional)</label>
+            <textarea 
+              placeholder={`{\n  "status": "active",\n  "trigger": "automation"\n}`}
+              rows={4}
+              className="w-full border border-gray-200 p-3 md:p-2.5 font-mono text-sm md:text-xs focus:border-black focus:outline-none bg-white resize-y"
+              value={body}
+              onChange={e => setBody(e.target.value)}
+            />
           </div>
         )}
 
