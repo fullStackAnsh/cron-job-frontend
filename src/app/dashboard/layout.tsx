@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Clock, ListOrdered, LogOut, Menu, X } from 'lucide-react';
+import { Clock, ListOrdered, LogOut, Menu, PlayCircle, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -92,6 +92,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <Clock className="h-5 w-5 md:h-4 md:w-4" /> <span>Schedule New Job</span>
             </Link>
+            
+            <Link  href="/dashboard/runs" 
+                 onClick={() => setIsOpen(false)}
+                  className="flex items-center space-x-3 rounded-md px-3 py-3 md:py-2 text-base md:text-sm font-medium text-slate-900 hover:bg-gray-100 transition-colors"
+                 >
+                      <PlayCircle className="h-5 w-5 md:h-4 md:w-4" /> <span>Runs</span>
+                </Link>
           </nav>
         </div>
 

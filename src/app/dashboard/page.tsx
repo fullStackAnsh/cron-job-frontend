@@ -2,7 +2,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
-import { Trash2, Terminal, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Trash2, Plus, Edit2 } from 'lucide-react';
 
 interface Job {
   id: string;
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const router = useRouter();
 
   const fetchJobs = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -37,7 +39,10 @@ export default function DashboardPage() {
     fetchJobs();
   }, [fetchJobs]);
 
-  const deleteJob = async (id: string) => {
+  const deleteJob = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!confirm('Are you sure you want to unschedule this worker?')) return;
 
@@ -47,9 +52,26 @@ export default function DashboardPage() {
     fetchJobs();
   };
 
+  const handleEditRedirect = (job: Job, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const params = new URLSearchParams({
+      id: job.id,
+      name: job.name,
+      url: job.url,
+      timezone: job.timezone,
+      ...(job.cron && { cron: job.cron }),
+      ...(job.run_at && { run_at: job.run_at }),
+    });
+
+    // CHANGE THIS LINE: Remove "/dashboard" prefix to match app/edit/page.tsx
+    router.push(`/edit?${params.toString()}`);
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 px-1">
-      {/* Top Bar: Adjusts layout dynamically from a vertical stack to a flat row */}
+      {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight text-black">Active Crons</h2>
@@ -68,24 +90,37 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Mobile-Only Card Layout: Visible on screens below 768px */}
+          {/* Mobile-Only Clickable Card Layout */}
           <div className="grid grid-cols-1 gap-4 md:hidden">
             {jobs.map((job) => (
-              <div key={job.id} className="border border-gray-200 bg-white p-4 shadow-sm space-y-3.5">
+              <Link 
+                key={job.id}
+                href={`/dashboard/logs/${job.id}`}
+                className="block border border-gray-200 bg-white p-4 shadow-sm space-y-3.5 hover:bg-gray-50/80 transition-colors rounded-sm group"
+              >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-black text-base">{job.name}</h3>
+                    <h3 className="font-semibold text-black text-base group-hover:text-blue-600 transition-colors">{job.name}</h3>
                     <p className="text-xs text-gray-400 font-mono mt-0.5 break-all max-w-[240px] xs:max-w-[320px]">
                       {job.url}
                     </p>
                   </div>
-                  <button 
-                    onClick={() => deleteJob(job.id)} 
-                    className="text-gray-400 hover:text-red-600 p-2 hover:bg-red-50 rounded transition-all"
-                    aria-label="Delete schedule"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center space-x-1 relative z-10">
+                    <button 
+                      onClick={(e) => handleEditRedirect(job, e)}
+                      className="text-gray-400 hover:text-black p-2 hover:bg-gray-100 rounded transition-all"
+                      aria-label="Edit schedule"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => deleteJob(job.id, e)} 
+                      className="text-gray-400 hover:text-red-600 p-2 hover:bg-red-50 rounded transition-all"
+                      aria-label="Delete schedule"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5 pt-1">
@@ -100,17 +135,11 @@ export default function DashboardPage() {
                     <span>{job.timezone}</span>
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-gray-100">
-                  <Link href={`/dashboard/logs/${job.id}`} className="flex items-center justify-center space-x-2 border border-gray-200 w-full py-2.5 text-xs font-medium bg-white hover:bg-gray-50 active:bg-gray-100 transition-all">
-                    <Terminal className="h-3.5 w-3.5" /> <span>View Execution Logs</span>
-                  </Link>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
 
-          {/* Desktop Table Viewport: Hidden below 768px (`md` checkpoint) */}
+          {/* Desktop Clickable Table Rows Layout */}
           <div className="hidden md:block overflow-x-auto border border-gray-200 bg-white shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -124,8 +153,12 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 text-sm">
                 {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-50/70 transition-colors">
-                    <td className="p-4 font-medium text-black">{job.name}</td>
+                  <tr 
+                    key={job.id} 
+                    onClick={() => router.push(`/dashboard/logs/${job.id}`)}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer group"
+                  >
+                    <td className="p-4 font-medium text-black group-hover:text-blue-600 transition-colors">{job.name}</td>
                     <td className="p-4 text-gray-500 font-mono text-xs max-w-xs truncate" title={job.url}>
                       {job.url}
                     </td>
@@ -135,12 +168,18 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="p-4 text-gray-500 text-xs">{job.timezone}</td>
-                    <td className="p-4 text-right space-x-3 whitespace-nowrap">
-                      <Link href={`/dashboard/logs/${job.id}`} className="inline-flex items-center space-x-1 border border-gray-200 px-2.5 py-1 text-xs font-medium hover:bg-gray-100 transition-all">
-                        <Terminal className="h-3 w-3" /> <span>Logs</span>
-                      </Link>
-                      <button onClick={() => deleteJob(job.id)} className="text-gray-400 hover:text-red-600 transition-all">
-                        <Trash2 className="h-4 w-4 inline" />
+                    <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                      <button 
+                        onClick={(e) => handleEditRedirect(job, e)}
+                        className="text-gray-400 hover:text-black p-1.5 hover:bg-gray-100 rounded transition-all inline-flex items-center justify-center"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => deleteJob(job.id, e)} 
+                        className="text-gray-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded transition-all inline-flex items-center justify-center"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
