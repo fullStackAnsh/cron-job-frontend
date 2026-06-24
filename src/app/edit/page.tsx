@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Trash, ArrowLeft, Settings, Calendar, RefreshCw, Layers } from 'lucide-react';
@@ -29,7 +29,7 @@ const getFrequencyFromCron = (cronExpr: string): string => {
   }
 };
 
-export default function EditJobPage() {
+function EditJobForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -396,5 +396,20 @@ export default function EditJobPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function EditJobPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
+          <div className="w-6 h-6 border-2 border-neutral-800 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono text-neutral-400">Retrieving schedule telemetry variables...</p>
+        </div>
+      }
+    >
+      <EditJobForm />
+    </Suspense>
   );
 }
