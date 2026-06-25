@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast'; // Imported toast utilities
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +13,6 @@ export default function LoginPage() {
   const supabase = createClient();
 
   const handleLogin = async () => {
-    // Basic frontend validation
     if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
@@ -24,91 +23,93 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast.error(error.message); // Replaced alert with toast
+      toast.error(error.message);
       setLoading(false);
       return;
     }
     
-    // --- LOGIN FLOW (With Database existence check) ---
     if (data.user) {
       try {
-        // Verify if the user records exist in your backend database table
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/users/${data.user.id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
 
-        // If backend explicitly says user does not exist in your user table
         if (response.status === 404) {
-          toast.error("Invalid credentials. Account records not found."); // Replaced alert with toast
-          await supabase.auth.signOut(); // Force sign out from auth session
+          toast.error("Invalid credentials. Account records not found.");
+          await supabase.auth.signOut();
           setLoading(false);
           return;
         }
       } catch (dbError) {
         console.error("Backend validation failed, routing safely:", dbError);
-        // Optional fallback: If backend server is down, decide whether to block or allow them through
       }
     }
 
-    toast.success('Successfully logged in!'); // Success toast added
-    
-    // Proceed straight to the workspace application if all checks pass
+    toast.success('Successfully logged in!');
     router.push('/dashboard');
     router.refresh();
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#EFEFEC] p-6 sm:p-12 antialiased">
-      {/* Toast notification container mounted here locally for ease of setup */}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F7F9] p-4 font-sans antialiased">
       <Toaster position="top-center" reverseOrder={false} />
 
-      {/* Outer container */}
-      <div className="w-full max-w-[480px] bg-white rounded-[40px] p-10 sm:p-14 border border-[#EFEFEC]/50 flex flex-col items-center shadow-[0_20px_50px_rgba(40,55,17,0.08)]">
+      {/* Main Login Module Wrapper */}
+      <div className="w-full max-w-[480px] flex flex-col items-center">
         
-        {/* Typography Hierarchy */}
-        <div className="text-center mb-10 w-full">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#283711] uppercase tracking-[0.12em]">
+        {/* Header Branding */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-[#111] uppercase tracking-[0.05em] mb-2">
             CRON.IO
-          </h2>
-          <p className="mt-3 text-sm font-medium text-[#BDBDBB] max-w-[280px] mx-auto leading-relaxed">
+          </h1>
+          <p className="text-[14px] text-[#6A737D]">
             Log in or establish a new scheduler scope
           </p>
         </div>
 
-        {/* Unified form area */}
-        <div className="w-full space-y-4">
+        {/* Inner Content Card */}
+        <div className="w-full bg-white rounded-[32px] p-8 sm:p-10 shadow-[0_4px_30px_rgba(0,0,0,0.02)] border border-[#E1E4E6] flex flex-col gap-6">
           
-          {/* Email Input Field */}
-          <div className="relative w-full">
+          {/* Email Block */}
+          <div className="w-full flex flex-col gap-2">
+            <label className="text-[11px] font-bold tracking-wider text-[#959DA5] uppercase">
+              Email Address
+            </label>
             <input
               type="email"
-              placeholder="Email Address"
-              className="w-full bg-[#EFEFEC]/60 text-[#283711] placeholder-[#BDBDBB] text-sm font-medium rounded-2xl px-6 py-4 transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#283711]/20 text-center"
+              placeholder="name@company.com"
+              className="w-full bg-white text-[#1B1F23] placeholder-[#A3A9AE] text-[15px] border border-[#E1E4E6] rounded-[16px] px-4 py-3.5 transition-colors focus:outline-none focus:border-[#1B1F23]"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          {/* Password Input Field */}
-          <div className="relative w-full">
+          {/* Password Block */}
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <label className="text-[11px] font-bold tracking-wider text-[#959DA5] uppercase">
+                Password
+              </label>
+              
+            </div>
             <input
               type="password"
-              placeholder="Password"
-              className="w-full bg-[#EFEFEC]/60 text-[#283711] placeholder-[#BDBDBB] text-sm font-medium rounded-2xl px-6 py-4 transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#283711]/20 text-center"
+              placeholder="••••••••"
+              className="w-full bg-white text-[#1B1F23] placeholder-[#A3A9AE] text-[15px] border border-[#E1E4E6] rounded-[16px] px-4 py-3.5 transition-colors focus:outline-none focus:border-[#1B1F23]"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          {/* Operational button stack */}
-          <div className="pt-4 space-y-3">
+          {/* Button Interactivity Layout */}
+          <div className="flex flex-col gap-3 pt-2">
             
-            {/* Sign In Button with CSS Spinner */}
+            {/* Sign In Trigger */}
             <button
               onClick={handleLogin}
               disabled={loading}
-              className="w-full bg-[#494F55] hover:bg-black active:scale-[0.99] text-white py-4 px-6 text-sm font-semibold rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:opacity-70 disabled:pointer-events-none shadow-sm flex items-center justify-center tracking-wide"
+              className="w-full bg-[#494F55] hover:bg-black text-white py-4 px-6 text-[15px] font-semibold rounded-[18px] transition-colors disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center"
             >
               {loading ? (
                 <svg 
@@ -117,35 +118,29 @@ export default function LoginPage() {
                   fill="none" 
                   viewBox="0 0 24 24"
                 >
-                  <circle 
-                    className="opacity-25" 
-                    cx="12" 
-                    cy="12" 
-                    r="10" 
-                    stroke="currentColor" 
-                    strokeWidth="4"
-                  />
-                  <path 
-                    className="opacity-75" 
-                    fill="currentColor" 
-                    tracking-wide
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               ) : (
                 'Sign In'
               )}
             </button>
             
-            {/* Create Account Button */}
+            {/* Create Account Link */}
             <Link
               href="/signup"
-              className="block w-full text-center hover:bg-[#9EE970] text-[#283711] bg-[#bcff95] active:scale-[0.99] py-4 px-6 text-sm font-semibold rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] tracking-wide shadow-sm"
+              className="block w-full text-center text-[#1B1F23] bg-[#B9F85D] hover:bg-[#a6e64c] py-4 px-6 text-[15px] font-semibold rounded-[18px] transition-colors"
             >
               Create Account
             </Link>
           </div>
+        </div>
 
+        {/* Global Nav Bottom Meta info */}
+        <div className="flex gap-4 mt-8 text-[12px] text-[#959DA5]">
+          <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+          <Link href="/terms" className="hover:underline">Terms of Service</Link>
+          <Link href="/help" className="hover:underline">Help Center</Link>
         </div>
       </div>
     </div>

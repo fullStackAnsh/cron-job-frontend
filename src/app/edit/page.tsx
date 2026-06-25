@@ -468,7 +468,7 @@ function EditJobForm() {
               type="submit" 
               className="w-full sm:w-auto bg-[#283711] hover:bg-[#283711]/90 px-10 py-4 font-bold text-white text-xs tracking-widest uppercase rounded-full transition-all active:scale-[0.98] shadow-sm"
             >
-              Save Modifications & Reschedule
+              Save 
             </button>
           </div>
         </form>
