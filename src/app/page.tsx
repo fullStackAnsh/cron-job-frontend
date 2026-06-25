@@ -20,9 +20,11 @@ export default function RootPage() {
   }, [router, supabase]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="text-sm font-medium text-gray-500 animate-pulse">
-        Initializing secure session...
+    <div className="flex min-h-screen items-center justify-center bg-[#F4F4F2]">
+      {/* Native Tailwind Shimmer UI */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-6 w-32 animate-pulse rounded-full bg-[#EFEFEC]" />
+        <div className="h-2 w-48 animate-pulse rounded-full bg-[#EFEFEC]" />
       </div>
     </div>
   );

@@ -2,20 +2,19 @@
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Mail, X } from 'lucide-react'; 
 import Link from 'next/link';
+import toast, { Toaster } from 'react-hot-toast'; // Installed toast utilities
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false); 
   const supabase = createClient();
   const router = useRouter();
 
   const handleSignup = async () => {
     if (!email || !password) {
-      alert("Please fill in all input criteria fields.");
+      toast.error("Please fill in all input criteria fields.");
       return;
     }
 
@@ -27,79 +26,121 @@ export default function SignupPage() {
     });
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       setLoading(false);
       return;
     }
 
-    // Trigger success toast verification modal banner
-    setShowPopup(true);
+    // Trigger explicit success toast configuration
+    toast.success('Account profile initialized successfully!');
+    
+    // Explicit notification helper telling them to check their inbox
+    toast((t) => (
+      <span className="text-xs font-medium leading-relaxed text-[#283711]">
+        Verification token transmitted! Please validate your email at <b>{email}</b> before authenticating.
+      </span>
+    ), {
+      duration: 6000,
+      icon: '✉️',
+    });
+
+    // Clear form data inputs cleanly
+    setPassword('');
     setLoading(false);
 
-    // Optional: Clear form inputs so the user sees something happened
-    setPassword('');
-
-    // Wait 4 seconds so the user can easily read the confirmation instructions
+    // Controlled micro-delay allowing the validation prompt to be fully absorbed
     setTimeout(() => {
       router.push('/login');
-    }, 4000);
+    }, 4500);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 relative">
-      {/* Toast Notification Banner Elements */}
-      {showPopup && (
-        <div className="absolute top-6 right-6 max-w-md w-full bg-black text-white p-4 shadow-xl flex items-start space-x-4 border border-neutral-800 animate-in fade-in slide-in-from-top-4 duration-300 z-50">
-          <div className="p-1 bg-neutral-900 border border-neutral-800 rounded">
-            <Mail className="h-5 w-5 text-gray-300" />
-          </div>
-          <div className="flex-1 space-y-1">
-            <h4 className="text-sm font-semibold tracking-wide">Verification Link Transmitted</h4>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              We sent a validation token to <span className="text-white font-medium font-mono">{email}</span>. 
-              Please verify your account before logging in.
-            </p>
-          </div>
-          <button onClick={() => setShowPopup(false)} className="text-neutral-400 hover:text-white transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+    <div className="flex min-h-screen items-center justify-center bg-[#EFEFEC] p-6 sm:p-12 antialiased relative overflow-x-hidden">
+      {/* Toast notification wrapper container mounted globally within viewport layout */}
+      <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="w-full max-w-md space-y-8 border border-gray-200 bg-white p-8 shadow-sm">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-black">CRON.IO</h2>
-          <p className="mt-2 text-sm text-gray-500">Establish a new scheduler profile scope</p>
+      {/* Main Form Container Card */}
+      <div className="w-full max-w-[480px] bg-white rounded-[40px] p-10 sm:p-14 flex flex-col items-center shadow-[0_20px_50px_rgba(40,55,17,0.08)] border border-[#EFEFEC]/50">
+        
+        {/* Typography Hierarchy */}
+        <div className="text-center mb-10 w-full">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#283711] uppercase tracking-[0.12em]">
+            CRON.IO
+          </h2>
+          <p className="mt-3 text-sm font-medium text-[#BDBDBB] max-w-[280px] mx-auto leading-relaxed">
+            Establish a new scheduler profile scope
+          </p>
         </div>
-        <div className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full border border-gray-200 p-3 text-sm focus:border-black focus:outline-none"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full border border-gray-200 p-3 text-sm focus:border-black focus:outline-none"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            onClick={handleSignup}
-            disabled={loading}
-            className="w-full bg-black py-3 text-sm font-medium text-white transition-all hover:bg-neutral-800 disabled:bg-gray-400"
-          >
-            {loading ? 'Registering Scope...' : 'Create Account'}
-          </button>
+
+        {/* Unified, perfectly aligned form element area */}
+        <div className="w-full space-y-4">
           
-          <Link
-            href="/login"
-            className="block text-center w-full border border-black py-3 text-sm font-medium text-black transition-all hover:bg-gray-50"
-          >
-            Already have account? Login Here
-          </Link>
+          {/* Email Input Field */}
+          <div className="relative w-full">
+            <input
+              type="email"
+              placeholder="Email Address"
+              className="w-full bg-[#EFEFEC]/60 text-[#283711] placeholder-[#BDBDBB] text-sm font-medium rounded-2xl px-6 py-4 transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#283711]/20 text-center"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          {/* Password Input Field */}
+          <div className="relative w-full">
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full bg-[#EFEFEC]/60 text-[#283711] placeholder-[#BDBDBB] text-sm font-medium rounded-2xl px-6 py-4 transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#283711]/20 text-center"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          {/* Button Interactivity Engine Stack */}
+          <div className="pt-4 space-y-3">
+            
+            {/* Create Account Primary Button with Forest Green SVG Spinner */}
+            <button
+              onClick={handleSignup}
+              disabled={loading}
+              className="w-full text-center hover:bg-[#9EE970] text-[#283711] bg-[#bcff95] active:scale-[0.99] py-4 px-6 text-sm font-semibold rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] tracking-wide shadow-sm disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center"
+            >
+              {loading ? (
+                <svg 
+                  className="animate-spin h-5 w-5 text-[#283711]" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle 
+                    className="opacity-25" 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4"
+                  />
+                  <path 
+                    className="opacity-75" 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+            
+            {/* Already have account? Login Link Button */}
+            <Link
+              href="/login"
+              className="w-full bg-[#494F55] hover:bg-black active:scale-[0.99] text-white py-4 px-6 text-sm font-semibold rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-sm flex items-center justify-center tracking-wide"
+            >
+              Already have account? Login Here
+            </Link>
+          </div>
+
         </div>
       </div>
     </div>
