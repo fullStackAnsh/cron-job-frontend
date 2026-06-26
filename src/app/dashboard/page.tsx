@@ -28,6 +28,7 @@ const formatProfile = (job: Job) => {
 // --- Stats Summary Component ---
 function StatsSummary({ jobs }: { jobs: Job[] | null }) {
   const [stats, setStats] = useState({ total: 0, lastRun: 'No runs yet' });
+ 
   const supabase = createClient();
 
   useEffect(() => {
@@ -154,6 +155,8 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const [jobs, setJobs] = useState<Job[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const supabase = createClient();
   const router = useRouter();
 
@@ -166,54 +169,59 @@ export default function DashboardPage() {
     } catch (err) { setJobs([]); } finally { setLoading(false); }
   }, [supabase]);
 
-  
-
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
+  function openDeleteModal(id: string, e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setJobToDelete(id); // Opens modal by setting the ID
+  }
+
   function handleEditRedirect(job: any, e: React.MouseEvent<HTMLButtonElement>) {
-  e.preventDefault();
-  e.stopPropagation();
-  
-  // Construct the query string from the job object to pre-fill the Edit component
-  const params = new URLSearchParams({
-    id: job.id,
-    name: job.name || '',
-    url: job.url || '',
-    method: job.method || 'POST',
-    timezone: job.timezone || 'Asia/Kolkata',
-  });
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const params = new URLSearchParams({
+      id: job.id,
+      name: job.name || '',
+      url: job.url || '',
+      method: job.method || 'POST',
+      timezone: job.timezone || 'Asia/Kolkata',
+    });
 
-  router.push(`/edit?${params.toString()}`);
-}
+    router.push(`/edit?${params.toString()}`);
+  }
 
-async function deleteJob(id: string, e: React.MouseEvent<HTMLButtonElement>) {
-  e.preventDefault();
-  e.stopPropagation();
+  async function proceedWithDeletion() {
+    if (!jobToDelete) return;
+    
+    setIsDeleting(true);
+    const { data: { session } } = await supabase.auth.getSession();
 
-  if (!confirm('Are you sure you want to delete this job?')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/jobs/${jobToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+      });
 
-  const { data: { session } } = await supabase.auth.getSession();
-
-  toast.promise(
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/jobs/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session?.access_token}`
-      },
-    }).then(async (res) => {
       if (!res.ok) {
         const error = await res.text();
         throw new Error(error || 'Failed to delete job');
       }
-      router.refresh(); // Refresh the server component data
-    }),
-    {
-      loading: 'Deleting job...',
-      success: 'Job deleted successfully!',
-      error: (err:any) => `${err.message}`,
+
+      // Optimistic Update: Immediately remove the deleted job from local state 
+      setJobs((prevJobs) => prevJobs ? prevJobs.filter(job => job.id !== jobToDelete) : null);
+
+      setJobToDelete(null); // Close Modal
+      router.refresh();     // Sync Next.js server component data in background
+    } catch (err: any) {
+      alert(err.message);   
+    } finally {
+      setIsDeleting(false);
     }
-  );
-}
+  }
 
   return (
     <div className="space-y-8 px-1">
@@ -247,8 +255,13 @@ async function deleteJob(id: string, e: React.MouseEvent<HTMLButtonElement>) {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                       <button onClick={(e) => handleEditRedirect(job, e)} className="text-[#283711]/60 hover:text-[#89d45c] p-2 rounded-xl transition-all"><Edit2 className="h-4 w-4" /></button>
-                    <button onClick={(e) => deleteJob(job.id, e)} className="text-[#283711]/40 hover:text-red-600 p-2 rounded-xl transition-all"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={(e) => handleEditRedirect(job, e)} className="text-[#283711]/60 hover:text-[#89d45c] p-2 rounded-xl transition-all"><Edit2 className="h-4 w-4" /></button>
+                      <button 
+                        onClick={(e) => openDeleteModal(job.id, e)} 
+                        className="text-[#283711]/40 hover:text-red-600 p-2 rounded-xl transition-all"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -259,6 +272,44 @@ async function deleteJob(id: string, e: React.MouseEvent<HTMLButtonElement>) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2"><JobActivityGraph jobs={jobs} /></div>
             <StatsSummary jobs={jobs} />
+          </div>
+        </div>
+      )}
+
+      {jobToDelete && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setJobToDelete(null)}
+        >
+          <div 
+            className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4 flex flex-col gap-4 border border-gray-100 animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Job Listing</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Are you sure you want to delete this job? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setJobToDelete(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={proceedWithDeletion}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition disabled:opacity-50 flex items-center justify-center"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

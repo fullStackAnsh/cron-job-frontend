@@ -184,10 +184,8 @@ export default function ProfilePage() {
       
       {/* Page Title Row */}
       <div className="space-y-1">
-        <h2 className="text-[28px] font-bold tracking-tight text-[#283711]">Account Identity</h2>
-        <p className="text-sm font-medium text-[#BDBDBB]">
-          Manage infrastructure context credentials and operational environments.
-        </p>
+        <h2 className="text-[28px] font-bold tracking-tight text-[#283711]">Account</h2>
+       
       </div>
 
       {/* Main Large Header Identity Card */}
@@ -224,45 +222,19 @@ export default function ProfilePage() {
       {/* 2-Column Parametric Grid Layout matching image spec */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {renderGridCard('Operator Name', 'name', profile.name)}
+        {renderGridCard('Name', 'name', profile.name)}
         
-        {renderGridCard('Phone Resource', 'phone_number', profile.phone_number, 'tel')}
+        {renderGridCard('Phone ', 'phone_number', profile.phone_number, 'tel')}
         
-        {/* SMS verification status non-editable capsule row type */}
-        <div className="bg-white rounded-[20px] p-5 sm:p-6 border border-[#EFEFEC] flex items-center justify-between min-h-[96px]">
-          <div className="space-y-1">
-            <span className="block font-semibold text-[#283711] text-[10px] tracking-[0.12em] uppercase font-mono opacity-80">
-              SMS Verification State
-            </span>
-            <span className="flex items-center gap-1.5 font-mono text-sm font-semibold text-[#283711]">
-              <span className="inline-flex h-4 w-4 bg-[#bcff95] rounded-full text-[10px] items-center justify-center text-[#283711] font-bold leading-none select-none pt-[0.5px]">✓</span>
-              <span className="text-[#283711]">Verified Active Pipeline</span>
-            </span>
-          </div>
-          <Shield className="h-5 w-5 text-[#BDBDBB] stroke-[1.5]" />
-        </div>
-
-        {renderGridCard('Temporal Origin (DOB)', 'date_of_birth', profile.date_of_birth, 'date')}
+       
+        {renderGridCard('DOB', 'date_of_birth', profile.date_of_birth, 'date')}
 
         {renderGridCard('Geographic Zone', 'country', profile.country)}
 
-        {renderGridCard('Terminal Domain', 'website', profile.website, 'url')}
 
-        {renderGridCard('Email Context', 'email', profile.email, 'email')}
+        {renderGridCard('Email', 'email', profile.email, 'email')}
 
-        {/* Security State row element */}
-        <div className="bg-white rounded-[20px] p-5 sm:p-6 border border-[#EFEFEC] flex items-center justify-between min-h-[96px]">
-          <div className="space-y-1">
-            <span className="block font-semibold text-[#283711] text-[10px] tracking-[0.12em] uppercase font-mono opacity-80">
-              Security State
-            </span>
-            <span className="flex items-center gap-2 font-mono text-sm font-medium text-[#283711]">
-              🔑 Managed via Supabase Auth
-            </span>
-          </div>
-          <Lock className="h-5 w-5 text-[#BDBDBB] stroke-[1.5]" />
-        </div>
-
+        
       </div>
     </div>
   );

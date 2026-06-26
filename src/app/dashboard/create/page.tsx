@@ -118,9 +118,12 @@ export default function CreateJobPage() {
       });
 
       if (res.ok) {
+         setLoading(false);
         toast.success('Worker successfully provisioned to engine!');
+        
         router.push('/dashboard');
         router.refresh();
+
       } else {
         const errorDetails = await res.text();
         console.error("Backend validation trace rejection:", errorDetails);
