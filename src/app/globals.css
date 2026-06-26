@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
+
+
 @theme {
-  /* This maps the 'font-sans' utility to your CSS variable */
-  --font-sans: var(--font-montserrat), sans-serif;
+  /* This configures Vercel Geist Sans as your main headline font */
+  --font-heading: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  
+  /* This sets up Vercel Geist Text as your default body font */
+  --font-body: "Geist Text", ui-sans-serif, system-ui, sans-serif;
+
+   --font-sans: var(--font-montserrat), sans-serif;
 }
+
+
 
 @keyframes shimmer {
   0% { transform: translateX(-100%); }

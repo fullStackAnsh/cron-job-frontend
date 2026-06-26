@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import MobileNav from "@/components/MobileNav"; // Adjusted import path to match your workspace folder hierarchy
 
-// 1. Initialize the font and define the CSS variable name
 const montserrat = Montserrat({ 
   subsets: ["latin"],
-  variable: "--font-montserrat", // This must match the variable in globals.css
+  variable: "--font-montserrat",
   display: "swap",
 });
 
@@ -21,8 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* 2. Apply the variable to the body tag along with font-sans */}
       <body className={`${montserrat.variable} font-sans bg-gray-50 text-slate-900 antialiased`}>
+        {/* Fixed: Automatically watches pathnames globally and renders selectively */}
+        <MobileNav />
         {children}
       </body>
     </html>

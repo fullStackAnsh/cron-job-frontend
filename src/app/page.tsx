@@ -3,11 +3,23 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence, Variants } from 'motion/react';
+import { Clock, Globe, Settings, Shield, BarChart3, Binary, Bell, Terminal, CheckCircle2 } from 'lucide-react';
 
 export default function RootPage() {
   const router = useRouter();
   const supabase = createClient();
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  const pathname = usePathname();
+
+  const navLinks = [
+    { name: 'Features', href: '/features' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'FAQ', href: '/faq' },
+    { name: 'About', href: '/about' },
+  ];
 
   useEffect(() => {
     const checkUser = async () => {
@@ -21,238 +33,428 @@ export default function RootPage() {
     checkUser();
   }, [router, supabase]);
 
+  // Explicitly typing variants solves the strict index signature error
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1, 
+        delayChildren: 0.2 
+      }
+    }
+  };
+  
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { 
+        type: "spring", 
+        stiffness: 150, 
+        damping: 20 
+      } 
+    }
+  };
+
   if (checkingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F7F9FB]">
-        <div className="flex flex-col items-center gap-3">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center gap-3"
+        >
           <div className="h-6 w-32 animate-pulse rounded-full bg-[#ECEEF0]" />
           <div className="h-2 w-48 animate-pulse rounded-full bg-[#ECEEF0]" />
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] text-[#191C1E] selection:bg-[#BEF264] antialiased">
+    <div className="flex flex-col min-h-screen bg-[#F7F9FB] text-[#191C1E] selection:bg-[#BEF264] antialiased font-body overflow-x-hidden">
       
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 w-full bg-[#F7F9FB]/80 backdrop-blur-md border-b border-[#C3C9B2]/30 z-50 transition-all duration-300">
+      <motion.nav 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="fixed top-0 w-full bg-[#F7F9FB]/80 backdrop-blur-md border-b border-[#C3C9B2]/30 z-50 transition-all duration-300"
+      >
         <div className="flex justify-between items-center max-w-[1120px] mx-auto px-4 md:px-12 py-4">
-          <div className="text-2xl font-bold tracking-tighter text-[#191C1E]">
+          
+          {/* Logo */}
+          <Link 
+            href="/" 
+            className="font-heading text-2xl font-bold tracking-tighter text-[#191C1E] hover:opacity-80 transition-opacity"
+          >
             CRON.IO
+          </Link>
+          
+          {/* Central Dynamic Navigation Links (Aceternity LayoutId Slider) */}
+          <div className="hidden md:flex items-center gap-12">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative text-sm font-medium tracking-wide transition-colors py-1 ${
+                    isActive ? 'text-[#191C1E]' : 'text-[#878a82] hover:text-[#476800]'
+                  }`}
+                >
+                  {link.name}
+                  {isActive && (
+                    <motion.span 
+                      layoutId="activeNavIndicator"
+                      className="absolute bottom-0 left-0 w-full h-[2px] bg-[#476800] rounded-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
           
-          <div className="flex items-center gap-4">
+          {/* Action Buttons */}
+          <div className="lg:flex hidden items-center gap-4">
             <Link 
               href="/login" 
-              className="text-[#434938] font-medium hover:text-[#476800] transition-colors text-sm"
+              className="text-[#888b83] font-medium hover:text-[#476800] transition-colors text-sm"
             >
               Sign In
             </Link>
-            <Link 
-              href="/signup" 
-              className="bg-[#BEF264] text-[#4B6E00] px-5 py-2.5 rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm text-sm"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Core Segment */}
-      <section className="pt-32 pb-20 md:pt-44 md:pb-28 overflow-hidden relative">
-        <div className="relative z-10 max-w-[1120px] mx-auto px-4 md:px-12 flex flex-col items-center text-center">
-          
-          <div className="inline-flex items-center gap-2 bg-[#BEF264]/20 border border-[#476800]/20 px-3 py-1 rounded-full mb-8">
-            <span className="text-[14px] text-[#476800]">⚡</span>
-            <span className="font-mono text-[12px] text-[#476800] uppercase tracking-widest font-medium">Next-Gen Scheduler Engine</span>
-          </div>
-
-          <h1 className="text-4xl md:text-[56px] md:leading-[1.1] font-bold tracking-tight max-w-4xl mb-6 text-[#191C1E]">
-            Establish automated job scopes across your stack with absolute runtime certainty.
-          </h1>
-          
-          <p className="text-base text-[#434938] max-w-2xl mb-12 opacity-90 leading-relaxed">
-            High-performance distributed cron platform tailored for modern infrastructure. Track logs, verify state payloads, and failover instantly with clean webhook routing.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-20 w-full justify-center max-w-md">
-            <Link 
-              href="/signup" 
-              className="bg-[#BEF264] text-[#4B6E00] px-8 py-4 rounded-xl font-bold text-base hover:shadow-lg hover:shadow-[#476800]/10 transition-all active:scale-95 text-center flex-1"
-            >
-              Create Free Account
-            </Link>
-            <Link 
-              href="/login" 
-              className="bg-[#191C1E] text-[#F7F9FB] px-8 py-4 rounded-xl font-bold text-base hover:bg-[#191C1E]/90 transition-all flex items-center justify-center gap-3 flex-1"
-            >
-              <span>⚙️</span> Launch Terminal
-            </Link>
-          </div>
-
-          {/* Precision Code Preview Window */}
-          <div className="w-full max-w-3xl bg-white rounded-2xl border border-[#C3C9B2]/30 overflow-hidden shadow-md">
-            <div className="bg-[#E6E8EA] px-4 py-3 flex items-center justify-between">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#BA1A1A]/20 border border-[#BA1A1A]/30"></div>
-                <div className="w-3 h-3 rounded-full bg-[#BEF264] border border-[#476800]/30"></div>
-                <div className="w-3 h-3 rounded-full bg-[#BEC6E0] border border-[#565E74]/30"></div>
-              </div>
-              <div className="font-mono text-xs text-[#434938]/80">scheduler_instance.config</div>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#BEF264] rounded-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#4B6E00] animate-pulse"></div>
-                <span className="font-mono text-[10px] font-bold text-[#4B6E00]">LIVE METRICS</span>
-              </div>
-            </div>
-            <div className="p-6 sm:p-8 text-left font-mono text-sm leading-relaxed overflow-x-auto bg-[#FFFFFF]">
-              <div className="text-[#434938]/50 mb-2">// Global scope synchronization active</div>
-              <div className="flex gap-4">
-                <span className="text-[#434938]/30 select-none w-4">1</span>
-                <span><span className="text-[#476800] font-medium">const</span> cluster = <span className="text-[#476800] font-medium">await</span> Cron.<span className="text-[#565E74]">establishScope</span>(<span className="text-[#476800]">'production_worker_node'</span>);</span>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-[#434938]/30 select-none w-4">2</span>
-                <span>cluster.<span className="text-[#565E74]">onEvent</span>(<span className="text-[#476800]">'0 */5 * * *'</span>, <span className="text-[#476800] font-medium">async</span> () =&gt; &#123;</span>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-[#434938]/30 select-none w-4">3</span>
-                <span className="pl-4">console.<span className="text-[#565E74]">log</span>(<span className="text-[#476800]">'Triggering data sync routines...'</span>);</span>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-[#434938]/30 select-none w-4">4</span>
-                <span className="pl-4"><span className="text-[#476800] font-medium">await</span> cluster.<span className="text-[#565E74]">dispatchPayload</span>(&#123; status: <span className="text-[#476800]">'synchronized'</span> &#125;);</span>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-[#434938]/30 select-none w-4">5</span>
-                <span>&#125;);</span>
-              </div>
-            </div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Link 
+                href="/signup" 
+                className="bg-[#BEF264] text-[#535848] px-5 py-2.5 rounded-lg font-bold shadow-sm text-sm block"
+              >
+                Get Started
+              </Link>
+            </motion.div>
           </div>
 
         </div>
-      </section>
+      </motion.nav>
 
-      {/* Grid Highlights Section */}
-      <section id="features" className="py-24 bg-white border-t border-[#C3C9B2]/20">
-        <div className="max-w-[1120px] mx-auto px-4 md:px-12">
-          <div className="mb-16">
-            <span className="font-mono text-xs text-[#476800] tracking-[0.2em] uppercase mb-4 block font-medium">Engine Highlights</span>
-            <h2 className="text-3xl md:text-[40px] max-w-2xl text-[#191C1E] font-bold leading-tight">
-              Engineered for workflows that can never drop an execution context.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Main Container Wrapper */}
+      <main className="flex-grow">
+        
+        {/* Hero Core Segment */}
+        <section className="pt-32 pb-20 md:pt-44 md:pb-28 overflow-hidden relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 max-w-[1120px] mx-auto px-4 md:px-12 flex flex-col items-center text-center"
+          >
             
-            {/* Box 1 */}
-            <div className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col items-start">
-              <div className="w-12 h-12 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
-                <span className="text-xl text-[#476800]">⏱️</span>
-              </div>
-              <h3 className="text-[20px] font-bold mb-3 text-[#191C1E]">Sub-Minute Intervals</h3>
-              <p className="text-sm text-[#434938] opacity-80 leading-relaxed">
-                Break out of standard crontab boundaries. Trigger automation loops at tight millisecond or second steps flawlessly.
-              </p>
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="inline-flex items-center gap-2 bg-[#BEF264]/20 border border-[#476800]/20 px-3 py-1 rounded-full mb-8 cursor-default"
+            >
+              <span className="text-[14px] text-[#476800]">⚡</span>
+              <span className="font-mono text-[12px] text-[#476800] uppercase tracking-widest font-medium">Next-Gen Scheduler Engine</span>
+            </motion.div>
 
-            {/* Box 2 */}
-            <div className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col items-start">
-              <div className="w-12 h-12 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
-                <span className="text-xl text-[#476800]">🛡️</span>
-              </div>
-              <h3 className="text-[20px] font-bold mb-3 text-[#191C1E]">Smart Auto-Retry</h3>
-              <p className="text-sm text-[#434938] opacity-80 leading-relaxed">
-                Endpoints down? Cron.io executes localized backoff mechanics to queue and safely redeploy payloads without state conflicts.
-              </p>
-            </div>
-
-            {/* Box 3 */}
-            <div className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col items-start">
-              <div className="w-12 h-12 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
-                <span className="text-xl text-[#476800]">📊</span>
-              </div>
-              <h3 className="text-[20px] font-bold mb-3 text-[#191C1E]">Deep Telemetry Analytics</h3>
-              <p className="text-sm text-[#434938] opacity-80 leading-relaxed">
-                Clean visibility over every runtime cycle. Instant trace logs down to headers, body outputs, and round-trip times.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Infrastructure Split Section */}
-      <section className="py-24 overflow-hidden">
-        <div className="max-w-[1120px] mx-auto px-4 md:px-12 flex flex-col md:flex-row items-center gap-16">
-          <div className="flex-1 space-y-8 order-2 md:order-1">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-[#191C1E]">Precision-grade infrastructure for serious engineering.</h2>
-              <p className="text-[#434938] opacity-90 leading-relaxed max-w-lg">
-                We built CRON.IO because generic job schedulers lack the observability required for high-stakes financial and data synchronization pipelines.
-              </p>
-            </div>
-            <ul className="space-y-6">
-              <li className="flex items-start gap-4">
-                <div className="mt-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center flex-shrink-0 text-[10px] text-[#4B6E00] font-bold">
-                  ✓
-                </div>
-                <div>
-                  <span className="font-bold text-[#191C1E] block mb-1">State Verification</span>
-                  <p className="text-sm text-[#434938]/80">Validate every payload before execution begins.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="mt-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center flex-shrink-0 text-[10px] text-[#4B6E00] font-bold">
-                  ✓
-                </div>
-                <div>
-                  <span className="font-bold text-[#191C1E] block mb-1">Zero-Config Webhooks</span>
-                  <p className="text-sm text-[#434938]/80">Integrate with your stack in under 30 seconds.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-          
-          <div className="flex-1 order-1 md:order-2 w-full">
-            <div className="aspect-square rounded-[32px] overflow-hidden bg-[#E6E8EA] relative border border-[#C3C9B2]/30 flex items-center justify-center p-8">
-              {/* Minimalist Graphic Element Placeholder */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#ECEEF0] to-[#F2F4F6]" />
-              
-              <div className="absolute bottom-8 left-8 p-6 bg-white/90 backdrop-blur rounded-2xl border border-[#C3C9B2]/30 shadow-xl max-w-xs z-10">
-                <div className="text-[10px] font-mono font-bold text-[#476800] mb-2 tracking-wider">SYSTEM UPTIME</div>
-                <div className="text-3xl font-bold text-[#191C1E] tracking-tighter">99.999%</div>
-                <div className="mt-4 flex gap-1">
-                  <div className="h-8 w-1.5 bg-[#BEF264] rounded-full"></div>
-                  <div className="h-8 w-1.5 bg-[#BEF264] rounded-full"></div>
-                  <div className="h-8 w-1.5 bg-[#BEF264] rounded-full"></div>
-                  <div className="h-8 w-1.5 bg-[#ECEEF0] rounded-full"></div>
-                  <div className="h-8 w-1.5 bg-[#BEF264] rounded-full"></div>
-                  <div className="h-8 w-1.5 bg-[#BEF264] rounded-full"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Structured Footer */}
-      <footer className="bg-[#F7F9FB] border-t border-[#C3C9B2]/30 w-full py-12">
-        <div className="flex flex-col md:flex-row justify-between items-center max-w-[1120px] mx-auto px-4 md:px-12 gap-8">
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <div className="text-lg font-bold text-[#191C1E]">CRON.IO</div>
-            <p className="text-xs text-[#434938]/70 max-w-xs text-center md:text-left">
-              Professional grade scheduling for distributed systems. Built for the modern architect.
+            <h1 className="font-heading text-4xl md:text-[64px] md:leading-[1.05] lg:text-[6vw] font-bold -tracking-tighter lg:leading-[0.8] md:[word-spacing:-0.05em] max-w-4xl mb-6 text-[#4d4f51]">
+              ORCHESTRATE <br/>END TO END<br /> JOB SCOPES.
+            </h1>
+            
+            <p className="text-base text-[#929391] max-w-2xl mb-12 opacity-90 leading-relaxed">
+              The premium scheduling platform built for modern teams. Monitor execution in real time, prevent failures before they happen, and keep your infrastructure running flawlessly.
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-20 w-full justify-center max-w-md">
+              <motion.div className="flex-1" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                <Link 
+                  href="/signup" 
+                  className="block bg-[#BEF264] text-[#4B6E00] px-8 py-4 rounded-xl font-bold text-base hover:shadow-lg hover:shadow-[#476800]/10 transition-shadow text-center"
+                >
+                  Create Account
+                </Link>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                <Link 
+                  href="/login" 
+                  className="bg-[#191C1E] text-[#F7F9FB] px-8 py-4 rounded-xl font-bold text-base hover:bg-[#191C1E]/90 transition-all flex items-center justify-center gap-3 w-full"
+                >
+                  Launch Terminal
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* Grid Highlights Section (Bento Style with Smooth Scroll Reveals) */}
+        <section id="features" className="py-24 bg-white border-t border-[#C3C9B2]/20 font-body">
+          <div className="max-w-[1120px] mx-auto px-4 md:px-12">
+            
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.6 }}
+              className="mb-16"
+            >
+              <span className="font-mono text-xs text-[#476800] tracking-[0.2em] uppercase mb-4 block font-medium">Engine Highlights</span>
+              <h2 className="font-heading text-3xl md:text-[40px] lg:text-[4vw] lg:leading-[0.9] max-w-2xl text-[#4d4f51] font-bold leading-tight">
+                Built for tasks that simply cannot fail.
+              </h2>
+            </motion.div>
+
+            {/* Bento Grid with staggered scroll loading */}
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="grid grid-cols-1 md:grid-cols-12 gap-6"
+            >
+              
+              {/* Box 1: Core Scheduling */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-8 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Clock className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[22px] font-bold mb-3 text-[#4d4f51]">Flexible Time Configuration</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed max-w-xl">
+                    Set up automation loops your way. Fully supports standard crontab expressions, sub-minute intervals, or simple manual inputs without requiring deep terminal knowledge.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 2: Timezone */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-4 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Globe className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Global Time Adaptability</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Align schedules dynamically with your workspace or system timezone effortlessly.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 3: HTTP Customization */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-6 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Settings className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Tailored HTTP Requests & Headers</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Choose any request format (GET, POST, PATCH) and attach personalized headers for seamless auth token management and flawless delivery across your server architecture.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 4: Autoretries & Failsafe */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-6 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Shield className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Smart Resilience & Timeouts</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Endpoints down? Localized backoff strategies immediately handle failing servers while customizable timeouts guarantee heavy jobs never stall your system flow.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 5: Deep Telemetry */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-4 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <BarChart3 className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Isolated Error Logging</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Never lose trace of errors. Historical failure logs are saved independently, meaning future successful cycles will never overwrite critical debugging data.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 6: Intelligent Tracking */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-8 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Binary className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[22px] font-bold mb-3 text-[#4d4f51]">Prediction Engines & Smart Validation</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed max-w-xl">
+                    See into your future queue with built-in runtime prediction logs. Combine it with regex pattern matching to screen incoming script results and confirm perfect outcomes.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 7: Webhooks & Alerts */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-6 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Bell className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Pristine Alerts & Webhooks</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Receive clean emails or hook instant alerts straight into Slack and third-party tools whenever workflows run or encounters hit a snag.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Box 8: Zero Install */}
+              <motion.div 
+                variants={itemVariants}
+                whileHover={{ y: -5, boxShadow: "0px 10px 30px rgba(71, 104, 0, 0.04)" }}
+                className="p-8 rounded-[24px] bg-[#F7F9FB] border border-[#C3C9B2]/30 flex flex-col justify-between md:col-span-6 transition-shadow duration-300"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/20 flex items-center justify-center mb-6">
+                    <Terminal className="w-5 h-5 text-[#476800]" />
+                  </div>
+                  <h3 className="font-heading text-[20px] font-bold mb-3 text-[#4d4f51]">Developer API & Cloud Panel</h3>
+                  <p className="text-sm text-[#73777F] leading-relaxed">
+                    Zero installations or infrastructure maintenance required. Build pipelines programmatically via a comprehensive developer-first API and a sleek web browser dashboard.
+                  </p>
+                </div>
+              </motion.div>
+
+            </motion.div>
           </div>
-          <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <a className="text-[#565E74] hover:text-[#476800] underline transition-all" href="#">Status</a>
-            <a className="text-[#565E74] hover:text-[#476800] underline transition-all" href="#">API</a>
-            <a className="text-[#565E74] hover:text-[#476800] underline transition-all" href="#">Security</a>
-            <a className="text-[#565E74] hover:text-[#476800] underline transition-all" href="#">Privacy</a>
-            <a className="text-[#565E74] hover:text-[#476800] underline transition-all" href="#">Terms</a>
+        </section>
+
+        {/* Infrastructure Split Section */}
+        <section className="py-24 overflow-hidden bg-[#F7F9FB]/50 border-t border-[#C3C9B2]/20 font-body">
+          <div className="max-w-[1120px] mx-auto px-4 md:px-12 grid grid-cols-1 lg:grid-cols-12 items-center gap-16 lg:gap-24">
+            
+            {/* Left Column: Copywriting */}
+            <motion.div 
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="space-y-10 lg:col-span-7 order-2 lg:order-1"
+            >
+              <div className="space-y-4">
+                <span className="font-mono text-xs text-[#476800] tracking-[0.2em] uppercase block font-medium">Enterprise Foundation</span>
+                <h2 className="font-heading text-3xl md:text-[40px] font-bold text-[#4d4f51] leading-[1.15] tracking-tight">
+                  Precision-grade infrastructure for modern, serious engineering.
+                </h2>
+                <p className="text-sm text-[#73777F] leading-relaxed max-w-xl">
+                  We built CRON.IO because generic job schedulers lack the real-time observability required for high-stakes financial calculations, heavy data synchronization, and absolute reliability.
+                </p>
+              </div>
+
+              {/* Grid Checkmarks Micro-interactions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                {[
+                  { title: "State Verification", desc: "Validate payload integrity before any job thread triggers execution." },
+                  { title: "Zero-Config Webhooks", desc: "Plug securely into your current applications in less than 30 seconds flat." },
+                  { title: "Concurrency Locks", desc: "Prevent overlapping job attempts and handle multiple database queues without collisions." },
+                  { title: "Payload Cryptography", desc: "Secure data signing ensures endpoints only process validated triggers from us." }
+                ].map((item, idx) => (
+                  <motion.div 
+                    key={idx} 
+                    whileHover={{ x: 4 }} 
+                    className="flex gap-3 items-start group cursor-default"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-[#476800] mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <h4 className="font-bold text-sm text-[#4d4f51] mb-1 group-hover:text-[#476800] transition-colors">{item.title}</h4>
+                      <p className="text-xs text-[#73777F] leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+            
+            {/* Right Column: Premium Interactive Chart Display */}
+            <motion.div 
+              initial={{ opacity: 0, x: 40, scale: 0.95 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="lg:col-span-5 order-1 lg:order-2 w-full"
+            >
+              <div className="aspect-[4/3] sm:aspect-square rounded-[32px] overflow-hidden bg-[#E6E8EA] relative border border-[#C3C9B2]/30 flex items-center justify-center p-8 transition-transform hover:scale-[1.01] duration-300">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#ECEEF0] via-[#F2F4F6] to-white opacity-80" />
+                <div className="absolute top-12 right-12 w-48 h-48 bg-[#BEF264]/10 rounded-full blur-3xl" />
+                
+                {/* Floating System Uptime Card Panel with Spring Entry */}
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+                  className="relative p-6 bg-white/95 backdrop-blur rounded-2xl border border-[#C3C9B2]/30 shadow-[0_20px_50px_rgba(0,0,0,0.04)] max-w-xs w-full"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-[10px] font-mono font-bold text-[#476800] tracking-wider uppercase">System Live Uptime</div>
+                    <span className="flex h-2 w-2 rounded-full bg-[#476800] animate-pulse" />
+                  </div>
+                  <div className="font-heading text-4xl font-bold text-[#4d4f51] tracking-tighter">99.999%</div>
+                  
+                  {/* Staggered Interactive Histogram Bars */}
+                  <div className="mt-5 flex items-end gap-1.5 h-10">
+                    {[60, 85, 70, 95, 40, 100, 90, 95].map((height, index) => (
+                      <motion.div 
+                        key={index}
+                        initial={{ height: 0 }}
+                        whileInView={{ height: `${height}%` }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.4 + (index * 0.05), type: "spring", stiffness: 80 }}
+                        className={`w-full rounded-sm ${height < 50 ? 'bg-[#ECEEF0]' : 'bg-[#BEF264]'}`}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
           </div>
-          <div className="text-xs text-[#434938]/60">
-            © 2026 CRON.IO Engine. All rights reserved.
+        </section>
+      </main>
+
+      {/* Aligned Footer Element */}
+      <footer className="bg-[#F7F9FB] border-t border-[#C3C9B2]/30 w-full py-10 mt-auto">
+        <div className="max-w-[1120px] mx-auto px-4 md:px-12 flex flex-col items-center justify-center gap-4 text-center text-xs">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-[#434938]/70">
+            <Link href="/" className="font-heading font-bold tracking-tighter text-[#191C1E] text-sm hover:opacity-80 transition-opacity">
+              CRON.IO
+            </Link>
+            <span className="hidden sm:inline text-[#C3C9B2]/60">|</span>
+            <span className="font-mono">&copy; 2026 Engine. All rights reserved.</span>
           </div>
         </div>
       </footer>
